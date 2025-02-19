@@ -1,0 +1,145 @@
+"use client";
+import { Box, CircularProgress, Skeleton } from "@mui/material";
+import { ApexOptions } from "apexcharts";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+
+// Dynamically import ApexCharts
+const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+
+// Define API response type
+interface CustomerData {
+  customer_name: string;
+  invoice_total_amt: number;
+}
+
+export default function TopCustomersPieChart() {
+  const [data, setData] = useState<CustomerData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("http://130.61.209.11:8080/ords/zatca/zatca_prod/TopFiveCustomers")
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.items) {
+          setData(result.items);
+        }
+      })
+      .catch((error) => console.error("Error fetching data:", error))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // const options: ApexOptions = {
+  //   chart: {
+  //     type: "donut",
+  //     height: 350,
+  //   },
+  //   labels: data.map((d) => d.customer_name),
+  //   legend: {
+  //     position: "top",
+  //   },
+  //   dataLabels: {
+  //     enabled: true,
+  //     formatter: (val: number) => `${val.toFixed(1)}%`,
+  //   },
+  //   tooltip: {
+  //     enabled: true,
+  //     theme: "dark", // Change to "light" if needed
+  //     y: {
+  //       formatter: (val: number) => `SAR ${val.toLocaleString()}`,
+  //     },
+  //   },
+  // };
+
+
+  // const options: ApexOptions = {
+  //   chart: {
+  //     type: "pie",
+  //     height: 315,
+  //   },
+  //   labels: data.map((d) => d.customer_name),
+  //   legend: {
+  //     position: "bottom",
+  //   },
+  
+  //   dataLabels: {
+  //     enabled: true,
+  //     formatter: (val: number) => `${val.toFixed(1)}%`,
+  //   },
+  //   tooltip: {
+  //     enabled: true,
+  //     theme: "dark", 
+  //     y: {
+  //       formatter: (val: number) => `SAR ${val.toLocaleString()}`,
+  //     },
+  //     custom: ({ series, seriesIndex, dataPointIndex, w }) => {
+  //       return `<div style="color: white; padding: 8px; border-radius: 5px;  font-size: 10px; line-height: 13px">
+  //                 ${w.globals.seriesNames[seriesIndex]}: <br /> ${series[seriesIndex][dataPointIndex]}
+  //               </div>`;
+  //     },
+  //   },
+
+  // };
+
+  const options: ApexOptions = {
+    chart: {
+      type: "pie",
+      height: 315,
+    },
+    labels: data.map((d) => d.customer_name),
+    legend: {
+      position: "bottom",
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (val: number) => `${val.toFixed(1)}%`,
+    },
+    tooltip: {
+      enabled: true,
+      theme: "dark",
+      y: {
+        formatter: (val: number) => `SAR ${val.toLocaleString()}`,
+      },
+      custom: ({ series, seriesIndex, dataPointIndex, w }) => {
+        return `<div style="
+                    color: white; 
+                    padding: 8px; 
+                    border-radius: 5px;  
+                    font-size: 10px; 
+                    line-height: 13px;
+                    text-align: left; /* Left-align customer name */
+                    max-width: 150px; /* Prevents overflow */
+                    white-space: normal; /* Allows wrapping if needed */
+                  ">
+                  <strong>${w.globals.seriesNames[seriesIndex]}</strong>:<br/> 
+                  ${series[seriesIndex][dataPointIndex]}
+                </div>`;
+      },
+    },
+  };
+  
+
+
+  const series = data.map((d) => d.invoice_total_amt);
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] min-h-[300px] h-full">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 !min-h-14">
+        Top 5 Customers by Invoice Value
+      </h3>
+
+      {loading ? (
+        <Box className="flex justify-center items-center h-[300px]">
+          <CircularProgress size={30} />
+          {/* <Skeleton variant="text" width="100%" height={500} /> */}
+        </Box>
+
+      ) : (
+        <ReactApexChart options={options} series={series} type="pie" height={315} />
+      )}
+    </div>
+  );
+}
+
+
+// donut
