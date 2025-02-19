@@ -1,35 +1,34 @@
 "use client"
 
-import * as React from 'react';
-import axios from 'axios';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import {
-    Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination,
-    TableRow, TableSortLabel, Button, Grid, TextField
+    Box,
+    Button,
+    CircularProgress,
+    Grid,
+    Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination,
+    TableRow, TableSortLabel,
+    TextField
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import axios from 'axios';
+import 'jspdf-autotable';
+import * as React from 'react';
 // import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Autocomplete } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import DetailTable from './DetailTable';
 
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import Typography from '@mui/material/Typography';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { exportToCSV, exportToPDF } from './Operation';
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { Modal } from "@/components/ui/modal";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
-import SearchIcon from "@mui/icons-material/Search";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-
-
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import SearchIcon from "@mui/icons-material/Search";
+import jsPDF from 'jspdf';
+import "jspdf-autotable"; 
+import autoTable from "jspdf-autotable";
 
 interface FilterState {
     customer_name: string;
@@ -202,6 +201,147 @@ export default function MainTable(): React.JSX.Element {
         setTableData(sortedData);
     };
 
+
+    // Export Data 
+    // ===================================
+
+    // Export PDF 
+
+//  const exportToPDF = () => {
+//     if (tableData.length === 0) {
+//         alert("No data to export");
+//         return;
+//     }
+
+//     // Extract table headers
+//     const headers = [Object.keys(tableData[0])];
+
+//     // Extract table rows
+//     const rows = tableData.map(row => Object.values(row));
+
+//     // Determine if landscape mode is needed based on column count
+//     const columnCount = headers[0].length;
+//     const orientation = columnCount > 6 ? "landscape" : "portrait";
+
+//     const doc = new jsPDF({
+//         orientation: orientation,
+//         unit: "mm",
+//         format: "a4"
+//     });
+
+//     doc.text("Invoice Data", 14, 15);
+
+//     // Calculate column widths dynamically
+//     const columnWidths = headers[0].map(header => {
+//         const maxLength = Math.max(
+//             header.length,
+//             ...rows.map(row => row[headers[0].indexOf(header)]?.toString().length || 0)
+//         );
+//         return maxLength * 3; // Adjust multiplier for better spacing
+//     });
+
+//     // Add table to PDF
+//     autoTable(doc, {  
+//         head: headers,
+//         body: rows,
+//         startY: 20,
+//         theme: "grid",
+//         styles: { overflow: "linebreak" },
+//         columnStyles: headers[0].reduce((acc: Record<number, { cellWidth: number | "auto" }>, _header, index) => {
+//           acc[index] = { cellWidth: columnWidths[index] > 50 ? "auto" : columnWidths[index] };
+//           return acc;
+//         }, {} as Record<number, { cellWidth: number | "auto" }>), // Explicitly type initial value
+//         margin: { top: 20 },
+//       });
+
+//     doc.save("Invoice_Information.pdf");
+// };
+
+const exportToPDF = () => {
+    if (tableData.length === 0) {
+        alert("No data to export");
+        return;
+    }
+
+    const headers = [Object.keys(tableData[0])];
+    const rows = tableData.map(row => Object.values(row));
+    const columnCount = headers[0].length;
+    const orientation = columnCount > 6 ? "landscape" : "portrait";
+
+    const doc = new jsPDF({
+        orientation: orientation,
+        unit: "mm",
+        format: "a4"
+    });
+
+    // Set the title
+    doc.text("Invoice Data", 14, 15);
+
+    // Calculate column widths dynamically
+    const columnWidths = headers[0].map(header => {
+        const maxLength = Math.max(
+            header.length,
+            ...rows.map(row => row[headers[0].indexOf(header)]?.toString().length || 0)
+        );
+        return maxLength * 3;
+    });
+
+    autoTable(doc, {
+        head: headers,
+        body: rows,
+        startY: 25,
+        theme: "grid",
+        styles: { overflow: "linebreak" },
+        columnStyles: headers[0].reduce((acc: Record<number, { cellWidth: number | "auto" }>, _header, index) => {
+            acc[index] = { cellWidth: columnWidths[index] > 50 ? "auto" : columnWidths[index] };
+            return acc;
+        }, {} as Record<number, { cellWidth: number | "auto" }>),
+        margin: { top: 20 },
+        
+        // Keep header fixed on top while scrolling
+        didDrawPage: (data) => {
+            doc.text("Invoice Data", 14, 15);
+            doc.setFontSize(10);
+            // doc.text(`Page ${doc.internal.getNumberOfPages()}`, doc.internal.pageSize.width - 20, 15);
+            doc.text(`Page ${doc.internal.pages.length}`, doc.internal.pageSize.width - 20, 15);
+
+        },
+    });
+
+    doc.save("Invoice_Information.pdf");
+};
+
+
+
+ // Export CSV 
+  const exportToCSV = () => {
+    if (tableData.length === 0) {
+        alert("No data to export");
+        return;
+    }
+
+    const headers = Object.keys(tableData[0]).join(",") + "\n";
+    const rows = tableData
+        .map(row => Object.values(row).map(value => `"${value}"`).join(","))
+        .join("\n");
+
+    const csvContent = headers + rows;
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "InvoiceInformation.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+
+
+
+
+    console.log("tableData", tableData)
     return (
         <Box sx={{ width: '100%' }}
 
@@ -211,6 +351,7 @@ export default function MainTable(): React.JSX.Element {
                     {/* Customer Name */}
                     <Grid item xs={2}>
                         <Autocomplete
+                            className='dark:!border-white'
                             options={Array.from(new Set(tableData.map((row) => row.customer_name || "")))}
                             value={filters.customer_name || ""}
                             onChange={(_event: React.SyntheticEvent, newValue: string | null) => handleFilterChange('customer_name', newValue || "")}
@@ -222,10 +363,12 @@ export default function MainTable(): React.JSX.Element {
                     {/* Invoice Number */}
                     <Grid item xs={2}>
                         <Autocomplete
-                            options={Array.from(new Set(tableData.map((row) => row.invoice_number || "")))}
-                            value={filters.invoice_number || ""}
-                            onChange={(_event: React.SyntheticEvent, newValue: string | null) => handleFilterChange('invoice_number', newValue || "")}
-                            getOptionLabel={(option: string) => option || ""}
+                            options={Array.from(new Set(tableData.map((row) => String(row.invoice_number || ""))))} // Convert to string
+                            value={String(filters.invoice_number || "")} // Convert to string
+                            onChange={(_event: React.SyntheticEvent, newValue: string | null) =>
+                                handleFilterChange("invoice_number", newValue || "")
+                            }
+                            getOptionLabel={(option) => String(option)} // Ensure it returns a string
                             renderInput={(params) => <TextField {...params} label="Invoice No." fullWidth />}
                         />
                     </Grid>
@@ -280,8 +423,9 @@ export default function MainTable(): React.JSX.Element {
 
                     <Grid item xs={12} textAlign="right">
                         <Button
-                            variant="contained"
-                            color="primary"
+                            className='bg-[#c84b3a] hover:bg-[#c84b3add] text-white'
+                            variant="outlined"
+                            color="inherit"
                             onClick={handleSearch}
                             sx={{ mx: 1 }}
                             startIcon={<SearchIcon />}
@@ -290,8 +434,9 @@ export default function MainTable(): React.JSX.Element {
                         </Button>
 
                         <Button
+                            className='bg-[#c84b3a] hover:bg-[#c84b3add] text-white'
                             variant="outlined"
-                            color="secondary"
+                            color="inherit"
                             onClick={handleReset}
                             sx={{ mx: 1 }}
                             startIcon={<RestartAltIcon />}
@@ -300,8 +445,9 @@ export default function MainTable(): React.JSX.Element {
                         </Button>
 
                         <Button
-                            variant="contained"
-                            color="success"
+                            className='bg-[#c84b3a] hover:bg-[#c84b3add] text-white'
+                            variant="outlined"
+                            color="inherit"
                             sx={{ mx: 1 }}
                             onClick={exportToCSV}
                             startIcon={<FileDownloadIcon />}
@@ -310,8 +456,9 @@ export default function MainTable(): React.JSX.Element {
                         </Button>
 
                         <Button
-                            variant="contained"
-                            color="error"
+                            className='bg-[#c84b3a] hover:bg-[#c84b3add] text-white'
+                            variant="outlined"
+                            color="inherit"
                             sx={{ mx: 1 }}
                             onClick={exportToPDF}
                             startIcon={<PictureAsPdfIcon />}
@@ -324,7 +471,12 @@ export default function MainTable(): React.JSX.Element {
 
             {loading ? <Paper
                 className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
-                sx={{ width: '100%', p: 2, textAlign: 'center' }}>Loading...</Paper> :
+                sx={{ width: '100%', p: 2, textAlign: 'center' }}>
+                <Box className="flex justify-center items-center h-[200px]">
+                    <CircularProgress size={30} />
+                    {/* <Skeleton variant="text" width="100%" height={500} /> */}
+                </Box>
+            </Paper> :
                 <Paper sx={{ width: '100%' }}
                     className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] "
                 >
@@ -356,27 +508,42 @@ export default function MainTable(): React.JSX.Element {
                                         ))}
                                 </TableRow>
                             </TableHead>
+
+
+
                             <TableBody>
                                 {tableData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
                                     <TableRow
-                                        className='hover:bg-gray-300  '
+                                        className="hover:bg-gray-300"
                                         key={index}
-                                        onClick={() => { setModalOpen(true), handleRowClick(row.customer_trx_id) }}
-                                        // onClick={() => setModalOpen(true)} 
                                         sx={{
                                             cursor: 'pointer',
                                             backgroundColor: selectedRow === row.customer_trx_id ? '#d3d3d3' : 'transparent'
                                         }}
                                     >
-                                        {Object.values(row).map((cell, cellIndex) => (
-                                            <TableCell key={cellIndex}
-                                                className='dark:text-white'
-                                                sx={{ whiteSpace: 'nowrap', padding: '8px', fontWeight: 'normal', textTransform: 'uppercase', minWidth: 120, borderRight: '1px solid #ddd' }}
-                                            >{cell}</TableCell>
+                                        {Object.entries(row).map(([key, cell], cellIndex) => (
+                                            <TableCell
+                                                key={cellIndex}
+                                                className={`"dark:text-white " ${key === 'clearance_status' ? 'hover:underline text-blue-500' : ''}`}
+                                                sx={{
+                                                    whiteSpace: 'nowrap',
+                                                    padding: '8px',
+                                                    fontWeight: 'normal',
+                                                    textTransform: 'uppercase',
+                                                    minWidth: 120,
+                                                    borderRight: '1px solid #ddd',
+
+                                                }}
+                                                onClick={key === 'clearance_status' ? () => { setModalOpen(true); handleRowClick(row.customer_trx_id); } : undefined}
+                                                style={{ cursor: key === 'clearance_status' ? 'pointer' : 'default' }}
+                                            >
+                                                {cell}
+                                            </TableCell>
                                         ))}
                                     </TableRow>
                                 ))}
                             </TableBody>
+
                         </Table>
                     </TableContainer>
 
@@ -412,9 +579,11 @@ export default function MainTable(): React.JSX.Element {
 
 
             {/* DetailTable inside Modal */}
-            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
+                className='!w-[80%] '
+            >
                 <div className="p-5 bg-white rounded-lg shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4">Error Details</h2>
+                    <h2 className="text-xl font-semibold mb-4">Detailed Error Messages</h2>
                     <DetailTable data={tableDataSingle as DataRow[]} loading={loadingDT} />
                 </div>
             </Modal>

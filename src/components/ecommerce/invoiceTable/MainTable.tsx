@@ -21,14 +21,14 @@ import DetailTable from './DetailTable';
 
 import { Modal } from "@/components/ui/modal";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { exportToCSV, exportToPDF } from './Operation';
 
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SearchIcon from "@mui/icons-material/Search";
-
-
+import jsPDF from 'jspdf';
+import "jspdf-autotable"; 
+import autoTable from "jspdf-autotable";
 
 interface FilterState {
     customer_name: string;
@@ -200,6 +200,146 @@ export default function MainTable(): React.JSX.Element {
         });
         setTableData(sortedData);
     };
+
+
+    // Export Data 
+    // ===================================
+
+    // Export PDF 
+
+//  const exportToPDF = () => {
+//     if (tableData.length === 0) {
+//         alert("No data to export");
+//         return;
+//     }
+
+//     // Extract table headers
+//     const headers = [Object.keys(tableData[0])];
+
+//     // Extract table rows
+//     const rows = tableData.map(row => Object.values(row));
+
+//     // Determine if landscape mode is needed based on column count
+//     const columnCount = headers[0].length;
+//     const orientation = columnCount > 6 ? "landscape" : "portrait";
+
+//     const doc = new jsPDF({
+//         orientation: orientation,
+//         unit: "mm",
+//         format: "a4"
+//     });
+
+//     doc.text("Invoice Data", 14, 15);
+
+//     // Calculate column widths dynamically
+//     const columnWidths = headers[0].map(header => {
+//         const maxLength = Math.max(
+//             header.length,
+//             ...rows.map(row => row[headers[0].indexOf(header)]?.toString().length || 0)
+//         );
+//         return maxLength * 3; // Adjust multiplier for better spacing
+//     });
+
+//     // Add table to PDF
+//     autoTable(doc, {  
+//         head: headers,
+//         body: rows,
+//         startY: 20,
+//         theme: "grid",
+//         styles: { overflow: "linebreak" },
+//         columnStyles: headers[0].reduce((acc: Record<number, { cellWidth: number | "auto" }>, _header, index) => {
+//           acc[index] = { cellWidth: columnWidths[index] > 50 ? "auto" : columnWidths[index] };
+//           return acc;
+//         }, {} as Record<number, { cellWidth: number | "auto" }>), // Explicitly type initial value
+//         margin: { top: 20 },
+//       });
+
+//     doc.save("Invoice_Information.pdf");
+// };
+
+const exportToPDF = () => {
+    if (tableData.length === 0) {
+        alert("No data to export");
+        return;
+    }
+
+    const headers = [Object.keys(tableData[0])];
+    const rows = tableData.map(row => Object.values(row));
+    const columnCount = headers[0].length;
+    const orientation = columnCount > 6 ? "landscape" : "portrait";
+
+    const doc = new jsPDF({
+        orientation: orientation,
+        unit: "mm",
+        format: "a4"
+    });
+
+    // Set the title
+    doc.text("Invoice Data", 14, 15);
+
+    // Calculate column widths dynamically
+    const columnWidths = headers[0].map(header => {
+        const maxLength = Math.max(
+            header.length,
+            ...rows.map(row => row[headers[0].indexOf(header)]?.toString().length || 0)
+        );
+        return maxLength * 3;
+    });
+
+    autoTable(doc, {
+        head: headers,
+        body: rows,
+        startY: 25,
+        theme: "grid",
+        styles: { overflow: "linebreak" },
+        columnStyles: headers[0].reduce((acc: Record<number, { cellWidth: number | "auto" }>, _header, index) => {
+            acc[index] = { cellWidth: columnWidths[index] > 50 ? "auto" : columnWidths[index] };
+            return acc;
+        }, {} as Record<number, { cellWidth: number | "auto" }>),
+        margin: { top: 20 },
+        
+        // Keep header fixed on top while scrolling
+        didDrawPage: (data) => {
+            doc.text("Invoice Data", 14, 15);
+            doc.setFontSize(10);
+            // doc.text(`Page ${doc.internal.getNumberOfPages()}`, doc.internal.pageSize.width - 20, 15);
+            doc.text(`Page ${doc.internal.pages.length}`, doc.internal.pageSize.width - 20, 15);
+
+        },
+    });
+
+    doc.save("Invoice_Information.pdf");
+};
+
+
+
+ // Export CSV 
+  const exportToCSV = () => {
+    if (tableData.length === 0) {
+        alert("No data to export");
+        return;
+    }
+
+    const headers = Object.keys(tableData[0]).join(",") + "\n";
+    const rows = tableData
+        .map(row => Object.values(row).map(value => `"${value}"`).join(","))
+        .join("\n");
+
+    const csvContent = headers + rows;
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "InvoiceInformation.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+
+
+
 
     console.log("tableData", tableData)
     return (
