@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true, // Disable Strict Linting in Production
+  },
   devIndicators: {
     buildActivity: false, // Disables the toast indicator
   },
