@@ -51,21 +51,21 @@ const Charts = () => {
 
                 <AccordionDetails>
                     <div className="grid grid-cols-12 gap-4 md:gap-5 pb-6">
-                        <div className="col-span-10 space-y-6 xl:col-span-10">
+                        <div className="col-span-12  space-y-6 xl:col-span-10">
                             <div className="grid grid-cols-12 gap-4 md:gap-5">
-                                <div className="col-span-12 space-y-6 xl:col-span-4">
+                                <div className="col-span-12 md:col-span-6 lg:col-span-4 space-y-6 xl:col-span-4">
                                     <BarChartCleared />
                                 </div>
-                                <div className="col-span-12 space-y-6 xl:col-span-4">
+                                <div className="col-span-12 md:col-span-6 lg:col-span-4 space-y-6 xl:col-span-4">
                                     <BarChartClearedUncleared />
                                 </div>
-                                <div className="col-span-12 space-y-6 xl:col-span-4">
+                                <div className="col-span-12 md:col-span-6 lg:col-span-4 space-y-6 xl:col-span-4">
                                     <TopCustomersPieChart />
                                 </div>
                             </div>
                         </div>
-                        <div className="col-span-2 space-y-6 xl:col-span-2">
-                            <div className="col-span-12 space-y-6 xl:col-span-3">
+                        <div className="col-span-12 md:col-span-6 lg:col-span-6  space-y-6 xl:col-span-2">
+                            <div className="col-span-12 md:col-span-6 lg:col-span-6 space-y-6 xl:col-span-3">
                                 <EcommerceMetrics />
                             </div>
                         </div>

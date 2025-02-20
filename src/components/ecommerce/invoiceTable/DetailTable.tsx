@@ -1,6 +1,7 @@
 import * as React from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
+import { Box, CircularProgress } from "@mui/material";
 
 interface DataRow {
   process_date: string;
@@ -49,7 +50,13 @@ const DetailTable: React.FC<DetailTableProps> = ({ data, loading }) => {
   return (
     <>
       {loading ? (
-        <Paper sx={{ width: "100%", p: 2, textAlign: "center" }}>Loading...</Paper>
+        <Paper
+          className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
+          sx={{ width: '100%', p: 2, textAlign: 'center' }}>
+          <Box className="flex justify-center items-center h-[20px]">
+            <CircularProgress size={30} />
+          </Box>
+        </Paper>
       ) : (
         <Paper
           sx={{

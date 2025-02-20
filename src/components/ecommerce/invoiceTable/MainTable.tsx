@@ -5,7 +5,7 @@ import {
     Button,
     CircularProgress,
     Grid,
-    Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination,
+    Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination,
     TableRow, TableSortLabel,
     TextField
 } from '@mui/material';
@@ -27,8 +27,11 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SearchIcon from "@mui/icons-material/Search";
 import jsPDF from 'jspdf';
-import "jspdf-autotable"; 
+import "jspdf-autotable";
 import autoTable from "jspdf-autotable";
+import Alert from '@mui/material/Alert';
+import CloseIcon from '@mui/icons-material/Close';
+
 
 interface FilterState {
     customer_name: string;
@@ -79,6 +82,7 @@ export default function MainTable(): React.JSX.Element {
     const [isRowId, setRowId] = React.useState<string>('');
     const [isFromDate, setFromDate] = React.useState<string>('');
     const [isToDate, setToDate] = React.useState<string>('');
+    const [isInvoiceId, setInvoiceId] = React.useState<string>('');
     const [filters, setFilters] = React.useState<FilterState>({
         customer_name: '',
         invoice_number: '',
@@ -114,6 +118,8 @@ export default function MainTable(): React.JSX.Element {
     const [loadingDT, setLoadingDT] = React.useState<boolean>(false);
     const [isPending, startTransition] = React.useTransition();
     const [selectedRow, setSelectedRow] = React.useState<string | null>(null);
+    const [openAlert, setOpenAlert] = React.useState(false);
+    const [alertMsg, setAlertMsg] = React.useState<string | null>(null);
 
     React.useEffect(() => {
         fetchData();
@@ -206,136 +212,129 @@ export default function MainTable(): React.JSX.Element {
     // ===================================
 
     // Export PDF 
+    const handleDownload = async (invoiceNo: string) => {
+        console.log("invoiceNo", invoiceNo)
+        if (invoiceNo === "") {
+            setOpenAlert(true);
+            setAlertMsg("Please select one of the invoice lines from the table.")
+            return;
+        } else {
 
-//  const exportToPDF = () => {
-//     if (tableData.length === 0) {
-//         alert("No data to export");
-//         return;
-//     }
+            const pdfUrl = `http://130.61.209.11:8080/ords/zatca/zatca_prod/DownloadInvoice?p_invoiceno=${invoiceNo}`;
 
-//     // Extract table headers
-//     const headers = [Object.keys(tableData[0])];
+            try {
+                const response = await fetch(pdfUrl);
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-//     // Extract table rows
-//     const rows = tableData.map(row => Object.values(row));
+                const data = await response.json(); // Parse response as JSON
 
-//     // Determine if landscape mode is needed based on column count
-//     const columnCount = headers[0].length;
-//     const orientation = columnCount > 6 ? "landscape" : "portrait";
+                if (!data.items || !data.items[0]?.report_pdf) {
+                    throw new Error("Missing 'report_pdf' field in response");
+                }
 
-//     const doc = new jsPDF({
-//         orientation: orientation,
-//         unit: "mm",
-//         format: "a4"
-//     });
+                const base64String = data.items[0].report_pdf;
 
-//     doc.text("Invoice Data", 14, 15);
+                // Decode Base64 string
+                const byteCharacters = atob(base64String);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: "application/pdf" });
 
-//     // Calculate column widths dynamically
-//     const columnWidths = headers[0].map(header => {
-//         const maxLength = Math.max(
-//             header.length,
-//             ...rows.map(row => row[headers[0].indexOf(header)]?.toString().length || 0)
-//         );
-//         return maxLength * 3; // Adjust multiplier for better spacing
-//     });
+                // Create and trigger file download
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `Invoice_${invoiceNo}.pdf`;
+                document.body.appendChild(a);
+                a.click();
 
-//     // Add table to PDF
-//     autoTable(doc, {  
-//         head: headers,
-//         body: rows,
-//         startY: 20,
-//         theme: "grid",
-//         styles: { overflow: "linebreak" },
-//         columnStyles: headers[0].reduce((acc: Record<number, { cellWidth: number | "auto" }>, _header, index) => {
-//           acc[index] = { cellWidth: columnWidths[index] > 50 ? "auto" : columnWidths[index] };
-//           return acc;
-//         }, {} as Record<number, { cellWidth: number | "auto" }>), // Explicitly type initial value
-//         margin: { top: 20 },
-//       });
-
-//     doc.save("Invoice_Information.pdf");
-// };
-
-const exportToPDF = () => {
-    if (tableData.length === 0) {
-        alert("No data to export");
-        return;
-    }
-
-    const headers = [Object.keys(tableData[0])];
-    const rows = tableData.map(row => Object.values(row));
-    const columnCount = headers[0].length;
-    const orientation = columnCount > 6 ? "landscape" : "portrait";
-
-    const doc = new jsPDF({
-        orientation: orientation,
-        unit: "mm",
-        format: "a4"
-    });
-
-    // Set the title
-    doc.text("Invoice Data", 14, 15);
-
-    // Calculate column widths dynamically
-    const columnWidths = headers[0].map(header => {
-        const maxLength = Math.max(
-            header.length,
-            ...rows.map(row => row[headers[0].indexOf(header)]?.toString().length || 0)
-        );
-        return maxLength * 3;
-    });
-
-    autoTable(doc, {
-        head: headers,
-        body: rows,
-        startY: 25,
-        theme: "grid",
-        styles: { overflow: "linebreak" },
-        columnStyles: headers[0].reduce((acc: Record<number, { cellWidth: number | "auto" }>, _header, index) => {
-            acc[index] = { cellWidth: columnWidths[index] > 50 ? "auto" : columnWidths[index] };
-            return acc;
-        }, {} as Record<number, { cellWidth: number | "auto" }>),
-        margin: { top: 20 },
-        
-        // Keep header fixed on top while scrolling
-        didDrawPage: (data) => {
-            doc.text("Invoice Data", 14, 15);
-            doc.setFontSize(10);
-            // doc.text(`Page ${doc.internal.getNumberOfPages()}`, doc.internal.pageSize.width - 20, 15);
-            doc.text(`Page ${doc.internal.pages.length}`, doc.internal.pageSize.width - 20, 15);
-
-        },
-    });
-
-    doc.save("Invoice_Information.pdf");
-};
+                // Cleanup
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error("Error downloading PDF:", error);
+                // alert("Failed to download the PDF. Please try again.");
+                setOpenAlert(true);
+                setAlertMsg("Failed to download the PDF, Please Select another invoice line from table")
+            }
+        }
+    };
 
 
 
- // Export CSV 
-  const exportToCSV = () => {
-    if (tableData.length === 0) {
-        alert("No data to export");
-        return;
-    }
+    const exportToCSV = () => {
+        if (tableData.length === 0) {
+            setOpenAlert(true);
+            setAlertMsg("No data to expor")
+            return;
+        }
 
-    const headers = Object.keys(tableData[0]).join(",") + "\n";
-    const rows = tableData
-        .map(row => Object.values(row).map(value => `"${value}"`).join(","))
-        .join("\n");
+        // Define manual mappings for key fields
+        const columnMappings: Record<string, string> = {
+            customer_trx_id: "Customer Transaction ID",
+            customer_id: "Customer ID",
+            customer_name: "Customer Name",
+            invoice_number: "Invoice Number",
+            invoice_date: "Invoice Date",
+            due_date: "Due Date",
+            transaction_amount: "Transaction Amount ($)",
+            tax_amount: "Tax Amount ($)",
+            discount_amount: "Discount Amount ($)",
+            total_amount: "Total Amount ($)",
+            payment_status: "Payment Status",
+            payment_method: "Payment Method",
+            transaction_id: "Transaction ID",
+            currency_code: "Currency",
+            exchange_rate: "Exchange Rate",
+            billing_address: "Billing Address",
+            shipping_address: "Shipping Address",
+            contact_email: "Contact Email",
+            contact_phone: "Contact Phone",
+            created_by: "Created By",
+            last_updated_by: "Last Updated By",
+            created_date: "Created Date",
+            last_updated_date: "Last Updated Date",
+            notes: "Notes",
+            status: "Status"
 
-    const csvContent = headers + rows;
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
+        };
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "InvoiceInformation.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-};
+        // Function to convert snake_case or camelCase to Title Case
+        const formatColumnName = (key: string): string => {
+            return key
+                .replace(/_/g, " ") // Replace underscores with spaces
+                .replace(/([a-z])([A-Z])/g, "$1 $2") // Add space before uppercase letters (camelCase)
+                .replace(/\b\w/g, char => char.toUpperCase()); // Capitalize first letter of each word
+        };
+
+        // Generate headers dynamically
+        const headers = Object.keys(tableData[0])
+            .map(key => columnMappings[key] || formatColumnName(key)) // Use mapping or auto-format
+            .join(",") + "\n";
+
+        // Format rows properly
+        const rows = tableData
+            .map(row => Object.values(row).map(value => `"${value}"`).join(","))
+            .join("\n");
+
+        const csvContent = headers + rows;
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+
+        // Create and trigger download
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "InvoiceInformation.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+
+
 
 
 
@@ -343,13 +342,17 @@ const exportToPDF = () => {
 
     console.log("tableData", tableData)
     return (
-        <Box sx={{ width: '100%' }}
+        <Box sx={{ width: '100%' }}    >
+            <Snackbar open={openAlert} autoHideDuration={10000} onClose={() => setOpenAlert(false)}>
+                <Alert onClose={() => setOpenAlert(false)} severity="error" sx={{ width: "100%" }}>
+                    {alertMsg}
+                </Alert>
+            </Snackbar>
 
-        >
             <Paper sx={{ p: 2, mb: 2 }} className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                 <Grid container spacing={2}>
                     {/* Customer Name */}
-                    <Grid item xs={2}>
+                    <Grid item xs={12} md={6} lg={2}>
                         <Autocomplete
                             className='dark:!border-white'
                             options={Array.from(new Set(tableData.map((row) => row.customer_name || "")))}
@@ -361,7 +364,7 @@ const exportToPDF = () => {
                     </Grid>
 
                     {/* Invoice Number */}
-                    <Grid item xs={2}>
+                    <Grid item xs={12} md={6} lg={2}>
                         <Autocomplete
                             options={Array.from(new Set(tableData.map((row) => String(row.invoice_number || ""))))} // Convert to string
                             value={String(filters.invoice_number || "")} // Convert to string
@@ -374,7 +377,7 @@ const exportToPDF = () => {
                     </Grid>
 
                     {/* Supplier */}
-                    <Grid item xs={2}>
+                    <Grid item xs={12} md={6} lg={2}>
                         <Autocomplete
                             options={Array.from(new Set(tableData.map((row) => row.supplier_name || "")))}
                             value={filters.supplier_name || ""}
@@ -385,7 +388,7 @@ const exportToPDF = () => {
                     </Grid>
 
                     {/* From Date */}
-                    <Grid item xs={2} sx={{ minWidth: 180 }}>
+                    <Grid item xs={12} md={6} lg={2} sx={{ minWidth: 180 }}>
                         <LocalizationProvider dateAdapter={AdapterDateFns}>
 
                             <DatePicker
@@ -399,7 +402,7 @@ const exportToPDF = () => {
                     </Grid>
 
                     {/* To Date */}
-                    <Grid item xs={2} sx={{ minWidth: 180 }}>
+                    <Grid item xs={12} md={6} lg={2} sx={{ minWidth: 180 }}>
                         <LocalizationProvider dateAdapter={AdapterDateFns}>
 
                             <DatePicker
@@ -412,7 +415,7 @@ const exportToPDF = () => {
                     </Grid>
 
                     {/* Status */}
-                    <Grid item xs={2}>
+                    <Grid item xs={12} md={6} lg={2}>
                         <Autocomplete
                             options={Array.from(new Set(tableData.map((row) => row.clearance_status || "")))}
                             value={filters.clearance_status || ""}
@@ -460,7 +463,8 @@ const exportToPDF = () => {
                             variant="outlined"
                             color="inherit"
                             sx={{ mx: 1 }}
-                            onClick={exportToPDF}
+                            // onClick={exportToPDF}
+                            onClick={() => handleDownload(isInvoiceId)}
                             startIcon={<PictureAsPdfIcon />}
                         >
                             Download PDF
@@ -510,39 +514,48 @@ const exportToPDF = () => {
                             </TableHead>
 
 
+                           
 
                             <TableBody>
-                                {tableData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
-                                    <TableRow
-                                        className="hover:bg-gray-300"
-                                        key={index}
-                                        sx={{
-                                            cursor: 'pointer',
-                                            backgroundColor: selectedRow === row.customer_trx_id ? '#d3d3d3' : 'transparent'
-                                        }}
-                                    >
-                                        {Object.entries(row).map(([key, cell], cellIndex) => (
-                                            <TableCell
-                                                key={cellIndex}
-                                                className={`"dark:text-white " ${key === 'clearance_status' ? 'hover:underline text-blue-500' : ''}`}
-                                                sx={{
-                                                    whiteSpace: 'nowrap',
-                                                    padding: '8px',
-                                                    fontWeight: 'normal',
-                                                    textTransform: 'uppercase',
-                                                    minWidth: 120,
-                                                    borderRight: '1px solid #ddd',
+                                {tableData
+                                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                    .map((row, index) => (
+                                        <TableRow
+                                            key={index}
+                                            className="hover:bg-gray-300"
+                                            sx={{
+                                                cursor: 'pointer',
+                                                backgroundColor: selectedRow === row.customer_trx_id ? '#d3d3d3' : 'transparent'
+                                            }}
+                                            onClick={() => {
+                                                setSelectedRow(row.customer_trx_id); // Set selected row
+                                                setInvoiceId(row.invoice_number || ""); // Set invoice ID
+                                            }}
+                                        >
+                                            {Object.entries(row).map(([key, cell], cellIndex) => (
+                                                <TableCell
+                                                    key={cellIndex}
+                                                    // className="dark:text-white"
+                                                    className={`"dark:text-white " ${key === 'clearance_status' ? 'hover:underline text-blue-500' : ''}`}
+                                                    sx={{
+                                                        whiteSpace: 'nowrap',
+                                                        padding: '8px',
+                                                        fontWeight: 'normal',
+                                                        textTransform: 'uppercase',
+                                                        minWidth: 120,
+                                                        borderRight: '1px solid #ddd',
+                                                    }}
+                                                    style={{ cursor: 'pointer' }} // Set pointer cursor
 
-                                                }}
-                                                onClick={key === 'clearance_status' ? () => { setModalOpen(true); handleRowClick(row.customer_trx_id); } : undefined}
-                                                style={{ cursor: key === 'clearance_status' ? 'pointer' : 'default' }}
-                                            >
-                                                {cell}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))}
+                                                    onClick={key === 'clearance_status' ? () => { setModalOpen(true); handleRowClick(row.customer_trx_id); setInvoiceId(row.invoice_number || ""); } : undefined}
+                                                >
+                                                    {cell}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    ))}
                             </TableBody>
+
 
                         </Table>
                     </TableContainer>
@@ -576,17 +589,21 @@ const exportToPDF = () => {
                     </AccordionDetails>
                 </Accordion>
             </Box> */}
+       
 
 
-            {/* DetailTable inside Modal */}
-            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-                className='!w-[80%] '
-            >
-                <div className="p-5 bg-white rounded-lg shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4">Detailed Error Messages</h2>
-                    <DetailTable data={tableDataSingle as DataRow[]} loading={loadingDT} />
+            {modalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                    <div className="!w-[80%] p-5 bg-white rounded-lg shadow-lg">
+                        <div className='flex justify-between items-center mb-4'>
+                            <h2 className="text-xl font-semibold ">Detailed Error Messages</h2>
+                            <button className='hover:text-[#c84b3add]' onClick={() => setModalOpen(false)}><CloseIcon /></button>
+                        </div>
+                        <DetailTable data={tableDataSingle as DataRow[]} loading={loadingDT} />
+                    </div>
                 </div>
-            </Modal>
+            )}
+
         </Box>
     );
 }

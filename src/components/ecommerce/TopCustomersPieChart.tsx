@@ -29,57 +29,6 @@ export default function TopCustomersPieChart() {
       .finally(() => setLoading(false));
   }, []);
 
-  // const options: ApexOptions = {
-  //   chart: {
-  //     type: "donut",
-  //     height: 350,
-  //   },
-  //   labels: data.map((d) => d.customer_name),
-  //   legend: {
-  //     position: "top",
-  //   },
-  //   dataLabels: {
-  //     enabled: true,
-  //     formatter: (val: number) => `${val.toFixed(1)}%`,
-  //   },
-  //   tooltip: {
-  //     enabled: true,
-  //     theme: "dark", // Change to "light" if needed
-  //     y: {
-  //       formatter: (val: number) => `SAR ${val.toLocaleString()}`,
-  //     },
-  //   },
-  // };
-
-
-  // const options: ApexOptions = {
-  //   chart: {
-  //     type: "pie",
-  //     height: 315,
-  //   },
-  //   labels: data.map((d) => d.customer_name),
-  //   legend: {
-  //     position: "bottom",
-  //   },
-  
-  //   dataLabels: {
-  //     enabled: true,
-  //     formatter: (val: number) => `${val.toFixed(1)}%`,
-  //   },
-  //   tooltip: {
-  //     enabled: true,
-  //     theme: "dark", 
-  //     y: {
-  //       formatter: (val: number) => `SAR ${val.toLocaleString()}`,
-  //     },
-  //     custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-  //       return `<div style="color: white; padding: 8px; border-radius: 5px;  font-size: 10px; line-height: 13px">
-  //                 ${w.globals.seriesNames[seriesIndex]}: <br /> ${series[seriesIndex][dataPointIndex]}
-  //               </div>`;
-  //     },
-  //   },
-
-  // };
 
   const options: ApexOptions = {
     chart: {
@@ -131,7 +80,6 @@ export default function TopCustomersPieChart() {
       {loading ? (
         <Box className="flex justify-center items-center h-[300px]">
           <CircularProgress size={30} />
-          {/* <Skeleton variant="text" width="100%" height={500} /> */}
         </Box>
 
       ) : (
