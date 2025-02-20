@@ -49,28 +49,29 @@ export default function TopCustomersPieChart() {
       y: {
         formatter: (val: number) => `SAR ${val.toLocaleString()}`,
       },
-      custom: ({ series, seriesIndex, dataPointIndex, w }) => {
+      custom: ({ seriesIndex, w }) => {
         return `<div style="
                     color: white; 
                     padding: 8px; 
                     border-radius: 5px;  
                     font-size: 10px; 
                     line-height: 13px;
-                    text-align: left; /* Left-align customer name */
-                    max-width: 150px; /* Prevents overflow */
-                    white-space: normal; /* Allows wrapping if needed */
+                    text-align: left;
+                    max-width: 150px; 
+                    white-space: normal;
                   ">
-                  <strong>${w.globals.seriesNames[seriesIndex]}</strong>:<br/> 
-                  ${series[seriesIndex][dataPointIndex]}
+                  <strong>${w.globals.labels[seriesIndex]}</strong>:<br/> 
+                  SAR ${w.globals.series[seriesIndex].toLocaleString()}
                 </div>`;
       },
+      
     },
   };
   
 
 
   const series = data.map((d) => d.invoice_total_amt);
-
+console.log("series",series)
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] min-h-[300px] h-full">
       <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 !min-h-14">

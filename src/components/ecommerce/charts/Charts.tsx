@@ -33,8 +33,9 @@ const Charts = () => {
             {/* External Button to Toggle Accordion */}
 
 
-            <Accordion expanded={isAccordionOpen} className="graph-accordion mb-6">
+            <Accordion expanded={isAccordionOpen} className="graph-accordion mb-6 ">
                 <AccordionSummary
+
                     expandIcon={
                         <ArrowDownwardIcon
                             sx={{ display: 'none' }}
@@ -42,7 +43,8 @@ const Charts = () => {
                     }
                     aria-controls="panel1-content"
                     id="panel1-header"
-                    onClick={() => setIsAccordionOpen(!isAccordionOpen)} // Also allows clicking on header
+                    // onClick={() => setIsAccordionOpen(!isAccordionOpen)} // Also allows clicking on header
+                    className="!cursor-default"
                 >
                     <h3 className="uppercase text-lg font-semibold text-gray-800 dark:text-white/90 ">
                         Zatca E-Invoices
