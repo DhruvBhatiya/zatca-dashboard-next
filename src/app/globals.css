@@ -421,7 +421,7 @@
 .apexcharts-legend.apx-legend-position-bottom.apexcharts-align-center, .apexcharts-legend.apx-legend-position-top.apexcharts-align-center {
   justify-content: flex-start !important;
   align-items: flex-start !important;
-  margin-left: 10%;
+  /* margin-left: 10%; */
 }
 
 

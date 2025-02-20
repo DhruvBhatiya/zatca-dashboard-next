@@ -110,9 +110,9 @@ export default function MainTable(): React.JSX.Element {
 
 
 
-    const API_URL2 = `http://130.61.209.11:8080/ords/zatca/zatca_prod/InvoiceInformation?CUSTOMERNAME=${filters.customer_name || 'undefined'}&ENDDATE=${isToDate || 'undefined'}&INVOICENO=${filters.invoice_number || 'undefined'}&STARTDATE=${isFromDate || 'undefined'}&STATUS=${filters.clearance_status || 'ALL'}&SUPPLIERNAME=${filters.supplier_name || 'undefined'}&page=${page + 1}&size=${rowsPerPage}`;
+    // const API_URL2 = `http://130.61.209.11:8080/ords/zatca/zatca_prod/InvoiceInformation?CUSTOMERNAME=${filters.customer_name || 'undefined'}&ENDDATE=${isToDate || 'undefined'}&INVOICENO=${filters.invoice_number || 'undefined'}&STARTDATE=${isFromDate || 'undefined'}&STATUS=${filters.clearance_status || 'ALL'}&SUPPLIERNAME=${filters.supplier_name || 'undefined'}&page=${page + 1}&size=${rowsPerPage}`;
 
-    const getSingleRow = `http://130.61.209.11:8080/ords/zatca/zatca_prod/InvoiceClearanceErrors?customer_trx_id=${isRowId ? isRowId : 'undefined'}`
+    // const getSingleRow = `http://130.61.209.11:8080/ords/zatca/zatca_prod/InvoiceClearanceErrors?customer_trx_id=${isRowId ? isRowId : 'undefined'}`
 
     const [loading, setLoading] = React.useState<boolean>(false);
     const [loadingDT, setLoadingDT] = React.useState<boolean>(false);
@@ -136,7 +136,10 @@ export default function MainTable(): React.JSX.Element {
 
 
     const fetchData = async (): Promise<void> => {
+        const API_URL2 = `http://130.61.209.11:8080/ords/zatca/zatca_prod/InvoiceInformation?CUSTOMERNAME=${filters.customer_name || 'undefined'}&ENDDATE=${isToDate || 'undefined'}&INVOICENO=${filters.invoice_number || 'undefined'}&STARTDATE=${isFromDate || 'undefined'}&STATUS=${filters.clearance_status || 'ALL'}&SUPPLIERNAME=${filters.supplier_name || 'undefined'}&page=${page + 1}&size=${rowsPerPage}`;
+
         setLoading(true);
+
         try {
             const response = await axios.get<ApiResponse>(API_URL2);
             startTransition(() => {
@@ -150,9 +153,33 @@ export default function MainTable(): React.JSX.Element {
     };
 
 
+    // const fetchSingleRowData = async (): Promise<void> => {
+    //     setLoadingDT(true);
+    //     const getSingleRow = `http://130.61.209.11:8080/ords/zatca/zatca_prod/InvoiceClearanceErrors?customer_trx_id=${isRowId ? isRowId : 'undefined'}`
+    //     try {
+    //         const response = await axios.get<ApiResponse>(getSingleRow);
+    //         startTransition(() => {
+    //             setTableDataSingle(response.data.items || []);
+    //         });
+    //     } catch (error) {
+    //         console.error("Error fetching data:", error);
+    //     } finally {
+    //         setLoadingDT(false);
+    //     }
+    // };
+
+
     const fetchSingleRowData = async (): Promise<void> => {
         setLoadingDT(true);
+    
         try {
+            if (!isRowId) {
+                console.warn("Warning: customer_trx_id is missing or invalid. Skipping API call.");
+                return; // Stop execution if isRowId is not valid
+            }
+    
+            const getSingleRow = `http://130.61.209.11:8080/ords/zatca/zatca_prod/InvoiceClearanceErrors?customer_trx_id=${isRowId}`;
+    
             const response = await axios.get<ApiResponse>(getSingleRow);
             startTransition(() => {
                 setTableDataSingle(response.data.items || []);
@@ -163,7 +190,9 @@ export default function MainTable(): React.JSX.Element {
             setLoadingDT(false);
         }
     };
+    
 
+    
     const handleChangePage = (event: unknown, newPage: number): void => {
         setPage(newPage);
     };
