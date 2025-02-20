@@ -17,7 +17,13 @@
 // Customer Site Number 
 // Supplier Name 
 
-export const headCellsMain = [
+export interface HeadCell {
+    id: string;
+    numeric: boolean;
+    label: string;
+}
+
+export const headCellsMain: HeadCell[] = [
     { id: 'clearance-status', numeric: false, label: 'Clearance Status' },
     { id: 'invoice-number', numeric: false, label: 'Invoice Number' },
     { id: 'issue-datetime', numeric: false, label: 'Issue DateTime' },
@@ -36,120 +42,74 @@ export const headCellsMain = [
     { id: 'supplier-name', numeric: false, label: 'Supplier Name' },
 ];
 
-
-
-function createDataMain(
-    id,
-    clearanceStatus,
-    invoiceNumber,
-    issueDateTime,
-    netAmount,
-    totalAmount,
-    type,
-    subType,
-    invoiceNote,
-    taxCurrency,
-    customerNumber,
-    customerType,
-    custTaxPayerNumber,
-    customerAccountNumber,
-    customerContractNumber,
-    customerSiteNumber,
-    supplierName,
-    supplierLocation,
-    billingLocation,
-    currency,
-    contractNumber,
-    additionalField1,
-    additionalField2,
-    field23,
-    field24
-) {
-    return {
-        id,
-        clearanceStatus,
-        invoiceNumber,
-        issueDateTime,
-        netAmount,
-        totalAmount,
-        type,
-        subType,
-        invoiceNote,
-        taxCurrency,
-        customerNumber,
-        customerType,
-        custTaxPayerNumber,
-        customerAccountNumber,
-        customerContractNumber,
-        customerSiteNumber,
-        supplierName,
-        supplierLocation,
-        billingLocation,
-        currency,
-        contractNumber,
-        additionalField1,
-        additionalField2,
-        field23,
-        field24,
-    };
+export interface MainData {
+    id: number;
+    clearanceStatus: string;
+    invoiceNumber: string;
+    issueDateTime: string;
+    netAmount: number;
+    totalAmount: number;
+    type: string;
+    subType: string;
+    invoiceNote: string;
+    taxCurrency: string;
+    customerNumber: string;
+    customerType: string;
+    custTaxPayerNumber: string;
+    customerAccountNumber: string;
+    customerContractNumber: string;
+    customerSiteNumber: string;
+    supplierName: string;
+    supplierLocation?: string;
+    billingLocation?: string;
+    currency?: string;
+    contractNumber?: string;
+    additionalField1?: string;
+    additionalField2?: string;
+    field23?: string;
+    field24?: string;
 }
 
+export const createDataMain = (data: MainData): MainData => data;
 
-// export const rowsMainData = [
-//     { id: 1, name: 'Cupcake', calories: 305, fat: 3.7, carbs: 67, protein: 4.3 },
-//     { id: 2, name: 'Donut', calories: 452, fat: 25.0, carbs: 51, protein: 4.9 },
-//     { id: 3, name: 'Eclair', calories: 262, fat: 16.0, carbs: 24, protein: 6.0 },
-// ];
-
-export const rowsMainData = [
-    createDataMain(
-        1,
-        'CLEARED',              // Clearance Status
-        '3559',                 // Invoice Number
-        '06-Feb-2025',          // Issue DateTime
-        435850,                 // Net Amount
-        435850,                 // Total Amount
-        '388',                  // Type
-        '010000',               // Sub Type
-        'INVOICE COMMENTS', // Invoice Note
-        'SAR',                  // Tax Currency
-        '2089',                 // Customer Number
-        'TAV Construction',      // Customer Type
-        'ORGANIZATION',         // Cust. Tax Payer Number
-        '',                      // Customer Account Number
-        'NEWFAB-00433',          // Customer Contract Number
-        '',                      // Customer Site Number
-        'Site-2089',             // Supplier Name
-
-    ),
+export const rowsMainData: MainData[] = [
+    createDataMain({
+        id: 1,
+        clearanceStatus: 'CLEARED',
+        invoiceNumber: '3559',
+        issueDateTime: '06-Feb-2025',
+        netAmount: 435850,
+        totalAmount: 435850,
+        type: '388',
+        subType: '010000',
+        invoiceNote: 'INVOICE COMMENTS',
+        taxCurrency: 'SAR',
+        customerNumber: '2089',
+        customerType: 'TAV Construction',
+        custTaxPayerNumber: 'ORGANIZATION',
+        customerAccountNumber: '',
+        customerContractNumber: 'NEWFAB-00433',
+        customerSiteNumber: '',
+        supplierName: 'Site-2089'
+    })
 ];
-
-
-
 
 // Details page 
 // ----------------------------------
 
-function createDataDetail(
-    id,
-    clearanceStatus,
-    processDate,
-    errorType,
-    errorStatus,
-    errorCode,
-    errorCategory
-) {
-    return {
-        id,
-        clearanceStatus,
-        processDate,
-        errorType,
-        errorStatus,
-        errorCode,
-        errorCategory
-    };
+export interface DetailData {
+    id: number;
+    clearanceStatus: string;
+    processDate: string;
+    errorType: string;
+    errorStatus: string;
+    errorCode: string;
+    errorCategory: string;
 }
-export const headCellsDetail = [
+
+export const createDataDetail = (data: DetailData): DetailData => data;
+
+export const headCellsDetail: HeadCell[] = [
     { id: 'clearance-status', numeric: false, label: 'Clearance Status' },
     { id: 'process-date', numeric: false, label: 'Process Date' },
     { id: 'error-type', numeric: false, label: 'Error Type' },
@@ -158,15 +118,14 @@ export const headCellsDetail = [
     { id: 'error-category', numeric: false, label: 'Error Category' },
 ];
 
-export const rowsDetailData = [
-    createDataDetail(
-        1,
-        '07-FEB-2025',              // Clearance Status
-        'Warning',                 // Process Date
-        'Warning',          // Error Type
-        'BR-S-09',                 // Error Status
-        'EN_16931',                  // Error Code
-        "The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is 'Standard rated' shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119).",                  // Error Category
-
-    ),
+export const rowsDetailData: DetailData[] = [
+    createDataDetail({
+        id: 1,
+        clearanceStatus: '07-FEB-2025',
+        processDate: 'Warning',
+        errorType: 'Warning',
+        errorStatus: 'BR-S-09',
+        errorCode: 'EN_16931',
+        errorCategory: "The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is 'Standard rated' shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119)."
+    })
 ];
